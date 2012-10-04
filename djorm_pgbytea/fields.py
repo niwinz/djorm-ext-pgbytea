@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
 
-import types
-
 from django.db import models, connections
 from psycopg2 import Binary
 from psycopg2.extensions import lobject as lobject_class
+import types
 
 psycopg_bynary_class = Binary("").__class__
 
+
 class ByteaField(models.Field):
+    """
+    Simple bytea field for save binary data
+    on postgresql.
+
+    This field does not support any django lookups
+    for searching.
+    """
+
     __metaclass__ = models.SubfieldBase
 
     def __init__(self, *args, **kwargs):
@@ -52,7 +60,10 @@ class ByteaField(models.Field):
         return value
 
 
-class LargeObjectProxy(object):
+class LargeObjectFile(object):
+    """
+    Proxy class over psycopg2 large object file instance.
+    """
     def __init__(self, oid=0, field=None, instance=None, **params):
         self.oid = oid
         self.field = field
@@ -61,11 +72,10 @@ class LargeObjectProxy(object):
         self._obj = None
 
     def __getattr__(self, name):
-        # TODO: need improvements
         if self._obj is None:
             raise Exception("File is not opened")
         try:
-            return super(LargeObjectProxy, self).__getattr__(name)
+            return super(LargeObjectFile, self).__getattr__(name)
         except AttributeError:
             return getattr(self._obj, name)
 
@@ -77,24 +87,32 @@ class LargeObjectProxy(object):
 
 
 class LargeObjectDescriptor(models.fields.subclassing.Creator):
+    """
+    LargeObjectField descriptor.
+    """
+
     def __set__(self, instance, value):
         value = self.field.to_python(value)
         if value is not None:
-            if not isinstance(value, LargeObjectProxy):
-                value = self.field._attribute_class(value, self.field, instance)
+            if not isinstance(value, LargeObjectFile):
+                value = LargeObjectFile(value, self.field, instance)
         instance.__dict__[self.field.name] = value
 
 
 class LargeObjectField(models.IntegerField):
-    _attribute_class = LargeObjectProxy
-    _descriptor_class = LargeObjectDescriptor
+    """
+    LargeObject field.
+
+    Internally is an ``oid`` field but returns a proxy
+    to referenced file.
+    """
 
     def db_type(self, connection):
         return 'oid'
 
     def contribute_to_class(self, cls, name):
         super(LargeObjectField, self).contribute_to_class(cls, name)
-        setattr(cls, self.name, self._descriptor_class(self))
+        setattr(cls, self.name, LargeObjectDescriptor(self))
 
     def _value_to_python(self, value):
         return value
@@ -103,7 +121,7 @@ class LargeObjectField(models.IntegerField):
         if not prepared:
             value = self.get_prep_value(value)
 
-        if isinstance(value, LargeObjectProxy):
+        if isinstance(value, LargeObjectFile):
             if value.oid > 0:
                 return value.oid
 
@@ -118,19 +136,11 @@ class LargeObjectField(models.IntegerField):
         return value
 
     def to_python(self, value):
-        if isinstance(value, LargeObjectProxy):
+        if isinstance(value, LargeObjectFile):
             return value
         elif isinstance(value, (int, long)):
-            return LargeObjectProxy(value, self, self.model)
+            return LargeObjectFile(value, self, self.model)
         elif isinstance(value, types.NoneType):
             return None
 
         raise ValueError("Invalid value")
-
-
-try:
-    from south.modelsinspector import add_introspection_rules
-    add_introspection_rules([], ['django_orm\.postgresql\.fields\.bytea\.ByteaField'])
-    add_introspection_rules([], ['django_orm\.postgresql\.fields\.bytea\.LargeObjectField'])
-except ImportError:
-    pass
