@@ -1,4 +1,4 @@
-django-orm-extensions core module
-=================================
+djorm-ext-pgbytea
+=================
 
-This module contaisn all basic and generic improvements needed by all submodules.
+Binary field and other usefull tools for postgresql bytea field type.
