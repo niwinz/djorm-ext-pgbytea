@@ -64,3 +64,9 @@ class BinaryDataTest(TestCase):
             database_data = instance.lobj.read()
 
             self.assertEqual(original_data, database_data)
+
+    def test_bytea_file_descriptor(self):
+        import pdb; pdb.set_trace()
+        obj = ByteaModel.objects.create(data=None)
+        obj.datafile.write("Hello")
+        obj.datafile.write("World")
