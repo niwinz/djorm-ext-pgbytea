@@ -65,8 +65,38 @@ class BinaryDataTest(TestCase):
 
             self.assertEqual(original_data, database_data)
 
-    def test_bytea_file_descriptor(self):
+    def test_bytea_file_descriptor_write(self):
         import pdb; pdb.set_trace()
         obj = ByteaModel.objects.create(data=None)
-        obj.datafile.write("Hello")
-        obj.datafile.write("World")
+        obj.datafile.write("123456789")
+        obj.datafile._position = 3
+        obj.datafile.write("aaa")
+
+        obj = ByteaModel.objects.get(pk=obj.pk)
+        self.assertEqual(obj.data, b"123aaa789")
+
+    def test_bytea_file_descriptor_write_02(self):
+        obj = ByteaModel.objects.create(data=None)
+        obj.datafile.write("123456789")
+        obj.datafile._position = 0
+        obj.datafile.write("aaa")
+
+        obj = ByteaModel.objects.get(pk=obj.pk)
+        self.assertEqual(obj.data, b"aaa456789")
+
+    def test_bytea_file_descriptor_write_03(self):
+        obj = ByteaModel.objects.create(data=None)
+        obj.datafile.write("123456789")
+        obj.datafile._position = 8
+        obj.datafile.write("aaaa")
+
+        obj = ByteaModel.objects.get(pk=obj.pk)
+        self.assertEqual(obj.data, b"1234567aaaa")
+
+    def test_bytea_file_descriptor_read(self):
+        obj = ByteaModel.objects.create(data=None)
+        obj.datafile.write("123456789")
+        obj.datafile._position = 3
+        data = obj.datafile.read(3)
+        self.assertEqual(bytes(data), b"456")
+
