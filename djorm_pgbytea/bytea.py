@@ -57,3 +57,11 @@ class ByteaField(models.Field):
 
         return value
 
+
+# South support
+try:
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ['^djorm_pgbytea\.bytea\.ByteaField'])
+except ImportError:
+    pass
+
