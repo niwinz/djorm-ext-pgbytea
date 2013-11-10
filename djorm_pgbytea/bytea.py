@@ -4,7 +4,7 @@ from django.db import models
 from psycopg2 import Binary
 import types
 
-psycopg_bynary_class = Binary("").__class__
+psycopg_binary_class = Binary("").__class__
 
 class ByteaField(models.Field):
     """
@@ -42,7 +42,7 @@ class ByteaField(models.Field):
             value = Binary(value.encode('utf-8'))
         elif isinstance(value, str):
             value = Binary(value)
-        elif isinstance(value, (psycopg_bynary_class, types.NoneType)):
+        elif isinstance(value, (psycopg_binary_class, types.NoneType)):
             value = value
         else:
             raise ValueError("only str, unicode and bytea permited")
@@ -60,4 +60,3 @@ class ByteaField(models.Field):
             return str(value)
 
         return value
-
