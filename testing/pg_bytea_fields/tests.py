@@ -17,7 +17,7 @@ class BinaryDataTest(TestCase):
 
     def test_internals_bytea_field(self):
         field = ByteaField()
-        prep_value = field.get_db_prep_value(None, None)
+        prep_value = field.get_db_prep_value(None, connection=None)
         self.assertEqual(prep_value, None)
 
     def test_simple_insert_on_bytea_field(self):
