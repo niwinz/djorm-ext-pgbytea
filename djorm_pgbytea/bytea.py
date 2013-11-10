@@ -24,9 +24,13 @@ class ByteaField(models.Field):
         super(ByteaField, self).__init__(*args, **kwargs)
 
     def get_prep_lookup(self, lookup_type, value):
+        if lookup_type == 'isnull':
+            return super(ByteaField, self).get_prep_lookup(lookup_type, value)
         raise TypeError("This field does not allow any kind of search.")
 
     def get_db_prep_lookup(self, lookup_type, value, connection, prepared=False):
+        if lookup_type == 'isnull':
+            return super(ByteaField, self).get_db_prep_lookup(lookup_type, value, connection=connection, prepared=prepared)
         raise TypeError("This field does not allow any kind of search.")
 
     def db_type(self, connection):
