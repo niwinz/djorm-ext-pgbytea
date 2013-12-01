@@ -17,7 +17,7 @@ class BinaryDataTest(TestCase):
 
     def test_internals_bytea_field(self):
         field = ByteaField()
-        prep_value = field.get_db_prep_value(None, None)
+        prep_value = field.get_db_prep_value(None, connection=None)
         self.assertEqual(prep_value, None)
 
     def test_simple_insert_on_bytea_field(self):
@@ -36,6 +36,30 @@ class BinaryDataTest(TestCase):
         obj = ByteaModel.objects.create(data=None)
         obj = ByteaModel.objects.get(pk=obj.id)
         self.assertEqual(obj.data, None)
+
+    def test_isnull_search_on_bytea_field(self):
+        obj1 = ByteaModel.objects.create(data=None)
+        obj2 = ByteaModel.objects.create(data='ABCD')
+        obj3 = ByteaModel.objects.create(data=None)
+
+        null_objs = ByteaModel.objects.filter(data__isnull=True)
+        self.assertEquals(null_objs.count(), 2)
+        self.assertEquals(set(null_objs), set([obj1, obj3]))
+
+        non_null_objs = ByteaModel.objects.filter(data__isnull=False)
+        self.assertEquals(non_null_objs.count(), 1)
+        self.assertEquals(set(non_null_objs), set([obj2]))
+
+        # Confirm that data=None is an alias for __isnull.
+        self.assertEquals(set(null_objs),
+                          set(ByteaModel.objects.filter(data=None)))
+        self.assertEquals(set(non_null_objs),
+                          set(ByteaModel.objects.exclude(data=None)))
+
+    def test_other_search_on_bytea_field(self):
+        ByteaModel.objects.create(data=None)
+        ByteaModel.objects.create(data='ABCD')
+        self.assertRaises(TypeError, ByteaModel.objects.filter, data='ABCD')
 
     def test_create_void_large_object(self):
         LargeObjectModel.objects.create(lobj=None)

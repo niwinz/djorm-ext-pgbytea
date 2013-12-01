@@ -4,7 +4,8 @@ from django.db import models
 from psycopg2 import Binary
 import types
 
-psycopg_bynary_class = Binary("").__class__
+psycopg_binary_class = Binary("").__class__
+
 
 class ByteaField(models.Field):
     """
@@ -24,9 +25,13 @@ class ByteaField(models.Field):
         super(ByteaField, self).__init__(*args, **kwargs)
 
     def get_prep_lookup(self, lookup_type, value):
+        if lookup_type == 'isnull':
+            return super(ByteaField, self).get_prep_lookup(lookup_type, value)
         raise TypeError("This field does not allow any kind of search.")
 
     def get_db_prep_lookup(self, lookup_type, value, connection, prepared=False):
+        if lookup_type == 'isnull':
+            return super(ByteaField, self).get_db_prep_lookup(lookup_type, value, connection=connection, prepared=prepared)
         raise TypeError("This field does not allow any kind of search.")
 
     def db_type(self, connection):
@@ -38,7 +43,7 @@ class ByteaField(models.Field):
             value = Binary(value.encode('utf-8'))
         elif isinstance(value, str):
             value = Binary(value)
-        elif isinstance(value, (psycopg_bynary_class, types.NoneType)):
+        elif isinstance(value, (psycopg_binary_class, types.NoneType)):
             value = value
         else:
             raise ValueError("only str, unicode and bytea permited")
@@ -64,4 +69,3 @@ try:
     add_introspection_rules([], ['^djorm_pgbytea\.bytea\.ByteaField'])
 except ImportError:
     pass
-

@@ -5,7 +5,7 @@ from djorm_pgbytea.fields import ByteaField, LargeObjectField
 
 
 class ByteaModel(models.Model):
-     data = ByteaField()
+    data = ByteaField()
 
 class LargeObjectModel(models.Model):
     lobj = LargeObjectField(default=None, null=True)
