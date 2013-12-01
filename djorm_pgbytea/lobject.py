@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from django.db import models, connections
-from psycopg2.extensions import lobject as lobject_class
 import types
+import sys
+
+from django.db import models, connections
+
+try:
+    from django.utils import six
+except ImportError:
+    import six
+
+from psycopg2.extensions import lobject as lobject_class
 
 
 class LargeObjectFile(object):
@@ -71,8 +79,7 @@ class LargeObjectField(models.IntegerField):
                 return value.oid
 
             raise ValueError("Oid must be a great that 0")
-
-        elif isinstance(value, types.NoneType):
+        elif value is None:
             return None
 
         raise ValueError("Invalid value")
@@ -83,9 +90,9 @@ class LargeObjectField(models.IntegerField):
     def to_python(self, value):
         if isinstance(value, LargeObjectFile):
             return value
-        elif isinstance(value, (int, long)):
+        elif isinstance(value, six.integer_types):
             return LargeObjectFile(value, self, self.model)
-        elif isinstance(value, types.NoneType):
+        elif value is None:
             return None
 
         raise ValueError("Invalid value")

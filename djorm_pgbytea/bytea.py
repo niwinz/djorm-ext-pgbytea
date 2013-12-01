@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from django.db import models
-from psycopg2 import Binary
 import types
+
+from django.db import models
+try:
+    from django.utils import six
+except ImportError:
+    import six
+
+from psycopg2 import Binary
 
 psycopg_binary_class = Binary("").__class__
 
 
-class ByteaField(models.Field):
+class ByteaField(six.with_metaclass(models.SubfieldBase, models.Field)):
     """
     Simple bytea field for save binary data
     on postgresql.
@@ -15,8 +21,6 @@ class ByteaField(models.Field):
     This field does not support any django lookups
     for searching.
     """
-
-    __metaclass__ = models.SubfieldBase
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('blank', True)
@@ -31,7 +35,9 @@ class ByteaField(models.Field):
 
     def get_db_prep_lookup(self, lookup_type, value, connection, prepared=False):
         if lookup_type == 'isnull':
-            return super(ByteaField, self).get_db_prep_lookup(lookup_type, value, connection=connection, prepared=prepared)
+            return super(ByteaField, self).get_db_prep_lookup(lookup_type, value,
+                                                              connection=connection,
+                                                              prepared=prepared)
         raise TypeError("This field does not allow any kind of search.")
 
     def db_type(self, connection):
@@ -39,26 +45,28 @@ class ByteaField(models.Field):
 
     def get_db_prep_value(self, value, connection, prepared=False):
         value = value if prepared else self.get_prep_value(value)
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             value = Binary(value.encode('utf-8'))
-        elif isinstance(value, str):
+        elif isinstance(value, six.binary_type):
             value = Binary(value)
-        elif isinstance(value, (psycopg_binary_class, types.NoneType)):
+        elif isinstance(value, psycopg_binary_class) or value is None:
             value = value
         else:
-            raise ValueError("only str, unicode and bytea permited")
+            raise ValueError("only str and bytes permited")
         return value
 
     def get_prep_value(self, value):
         return value
 
     def to_python(self, value):
-        if isinstance(value, str):
+        if isinstance(value, six.binary_type):
             return value
-        elif isinstance(value, unicode):
+        elif isinstance(value, six.text_type):
             return value.encode('utf-8')
-        elif isinstance(value, buffer):
-            return str(value)
+        elif isinstance(value, six.memoryview):
+            if hasattr(value, "tobytes"):
+                return value.tobytes()
+            return six.binary_type(value)
 
         return value
 
