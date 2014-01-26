@@ -6,7 +6,7 @@ Core module of django orm extensions package. Is a collection of third party plu
 
 setup(
     name = "djorm-ext-pgbytea",
-    version = '0.5.0',
+    version = '0.6.0',
     url = 'https://github.com/niwibe/djorm-ext-pgbytea',
     license = 'BSD',
     platforms = ['OS Independent'],
