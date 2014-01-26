@@ -2,14 +2,9 @@
 
 import types
 import sys
+import six
 
 from django.db import models, connections
-
-try:
-    from django.utils import six
-except ImportError:
-    import six
-
 from psycopg2.extensions import lobject as lobject_class
 
 

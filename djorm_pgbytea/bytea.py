@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import types
+import six
 
 from django.db import models
-try:
-    from django.utils import six
-except ImportError:
-    import six
-
 from psycopg2 import Binary
+
+from . import compat
 
 psycopg_binary_class = Binary("").__class__
 
@@ -63,7 +61,7 @@ class ByteaField(six.with_metaclass(models.SubfieldBase, models.Field)):
             return value
         elif isinstance(value, six.text_type):
             return value.encode('utf-8')
-        elif isinstance(value, six.memoryview):
+        elif isinstance(value, compat.buffer_type):
             if hasattr(value, "tobytes"):
                 return value.tobytes()
             return six.binary_type(value)
