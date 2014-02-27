@@ -9,4 +9,4 @@ else:
     if sys.platform.startswith('java'):
         buffer_type = (memoryview,)
     else:
-        buffer_type = (memoryview, buffer,)
+        buffer_type = (buffer,)
