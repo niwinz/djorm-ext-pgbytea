@@ -91,3 +91,11 @@ class LargeObjectField(models.IntegerField):
             return None
 
         raise ValueError("Invalid value")
+
+
+# South support
+try:
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ['^djorm_pgbytea\.lobject\.LargeObjectField'])
+except ImportError:
+    pass
