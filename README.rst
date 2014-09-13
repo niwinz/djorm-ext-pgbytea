@@ -1,6 +1,9 @@
 djorm-ext-pgbytea
 =================
 
+NOTE: this package is deprecated, because django after version 1.6 has support
+for binaryfield nativelly.
+
 .. image:: https://travis-ci.org/niwibe/djorm-ext-pgbytea.png?branch=master
     :target: https://travis-ci.org/niwibe/djorm-ext-pgbytea
 
